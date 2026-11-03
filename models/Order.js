@@ -1,10 +1,10 @@
 const mongoose = require("mongoose")
 
 const orderschema = new mongoose.Schema({
-    id:{type:mongoose.Schema.ObjectId} ,
-    listing:{type:mongoose.Schema.ObjectId , ref:"Listing"},    
-    buyer:{type:mongoose.Schema.ObjectId , ref:"User"} , 
-    finalPrice: {type:Number , require:true} , 
+    listing:{type:mongoose.Schema.ObjectId , ref:"Listing" , required: true},    
+    buyer:{type:mongoose.Schema.ObjectId , ref:"User" , required: true} , 
+    seller: {type:mongoose.Schema.ObjectId , ref: 'User' , required:true} , 
+    finalPrice: {type:Number , required:true} , 
     statues:{enum:["Pendding" , "Paid" , "Shipped" , "Completed"] , default:"Pendding"} 
 },{timestamps:true})
 
