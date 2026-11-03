@@ -64,10 +64,14 @@ const listingSchema = new mongoose.Schema({
     },
     winner: {
         type: mongoose.Types.ObjectId,
-        ref: User
+        ref: 'User'
     },
     images: {
         type: [String],
         trim: true
     }
 }, {timestamps: true})
+
+const Listing = mongoose.model('Listing', listingSchema)
+
+module.exports = Listing

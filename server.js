@@ -8,7 +8,7 @@ const cors = require('cors')
 
 // Routes Import
 const authRoutes = require('./routes/auth.routes')
-
+const listingRoutes = require('./routes/listing.routes.js')
 
 
 // Middleware
@@ -24,6 +24,7 @@ app.use(morgan('dev'))
 
 // Routes
 app.use('/auth',authRoutes)
+app.use('/listings', listingRoutes)
 
 
 // connect to database and listen on Port 3000
