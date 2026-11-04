@@ -13,13 +13,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    email:{type: String , required: true , unique: true} , 
-    enum: ['user' , 'admin'] , 
-    default: 'user'
+    email:{
+      type: String, 
+      required: true, 
+      unique: true
+    }, 
+    role: {
+      type: String,
+      enum: ['User', 'Admin'],
+      default: 'User'
+    }
 
-  },
-  { timestamps: true },
-);
+  },{ timestamps: true });
 
 userSchema.set("toJSON", {
   transform: (document, returnedObject) => {
