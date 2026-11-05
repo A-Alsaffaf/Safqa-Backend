@@ -20,11 +20,10 @@ const BidSchema = new mongoose.Schema({
 
     } , 
     placedAt:{
-
         type:Date
     }
 
-})
+}, {timestamps: true})
 
 const Bid = mongoose.model("Bid" , BidSchema)
 
