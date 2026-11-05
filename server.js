@@ -9,8 +9,8 @@ const cors = require('cors')
 // Routes Import
 const authRoutes = require('./routes/auth.routes')
 const listingRoutes = require('./routes/listing.routes.js')
-
-
+const ordersRoutes = require('./routes/order.routes.js')
+const categoryRoutes =require('./routes/category.routes.js')
 // Middleware
 app.use(
     cors({
@@ -25,8 +25,10 @@ app.use(morgan('dev'))
 // Routes
 app.use('/auth',authRoutes)
 app.use('/listings', listingRoutes)
+app.use('/orders', ordersRoutes)
+app.use('/', categoryRoutes)
 
-
+  
 // connect to database and listen on Port 3000
 async function startServer() {
     const PORT = process.env.PORT || 3000;
