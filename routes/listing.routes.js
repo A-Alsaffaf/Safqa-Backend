@@ -193,6 +193,17 @@ router.post('/:listingId/buy-now', verifyToken, async (req,res) => {
 
 })
 
+router.get('/my-listings', async (req,res) => {
+    try {
+        const myListings = await Listing.find({seller: req.user.id})
+        res.status(200).json(myListings)
+    }
+    catch(err) {
+        console.log(err);
+        res.status(404).json({message: err.message})
+    }
+})
+
 module.exports = router
 
 // localhost:3000/listings?q=Fixed
