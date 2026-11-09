@@ -30,7 +30,7 @@ app.use('/listings', listingRoutes)
 app.use('/', bidRoutes)
 app.use('/order' ,orderRoutes)
 app.use('/category' , categoryRoutes)
-app.use("/reports", reportRoutes)
+app.use("/", reportRoutes)
 
 // connect to database and listen on Port 3000
 async function startServer() {

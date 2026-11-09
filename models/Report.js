@@ -8,7 +8,7 @@ const ReportSchema = new mongoose.Schema({
     },
     targetType: {
         type: String,
-        enum: ["auction", "fixed"]
+        enum: ["Auction", "Fixed"]
     },
     targetId: {
 
@@ -22,7 +22,7 @@ const ReportSchema = new mongoose.Schema({
     createdAt: {
         type: Date
     }
-})
+}, {timestamps:true})
 
 const Report = mongoose.model("Report", ReportSchema)
 module.exports = Report;
