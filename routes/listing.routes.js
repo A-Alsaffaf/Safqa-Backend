@@ -26,7 +26,7 @@ router.get('/', async (req,res) => {
 })
 
 
-router.post('/', async(req,res) => {
+router.post('/',verifyToken, async(req,res) => {
 
     try {
 
@@ -36,7 +36,6 @@ router.post('/', async(req,res) => {
             type,
             condition,
             status,
-            seller,
             price,
             buyNowPrice,
             startingBid,
@@ -56,7 +55,7 @@ router.post('/', async(req,res) => {
             type,
             condition,
             status,
-            seller,
+            seller: req.user._id,
             price,
             buyNowPrice,
             startingBid,
@@ -73,6 +72,7 @@ router.post('/', async(req,res) => {
     } 
     catch(err){
         console.log(err);
+        res.status(404).json({message: err.message})
     }
 
 })
