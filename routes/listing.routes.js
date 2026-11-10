@@ -26,6 +26,14 @@ router.get('/', async (req,res) => {
 })
 
 
+router.get('/enums', (req,res) => {
+    res.status(200).json({
+        type: Listing.schema.path('type').enumValues,
+        condition: Listing.schema.path('condition').enumValues,
+    })
+})
+
+
 router.post('/',verifyToken, async(req,res) => {
 
     try {
