@@ -29,7 +29,7 @@ app.use('/auth',authRoutes)
 app.use('/listings', listingRoutes)
 app.use('/', bidRoutes)
 app.use('/order' ,orderRoutes)
-app.use('/category' , categoryRoutes)
+app.use('/' , categoryRoutes)
 
 
 // connect to database and listen on Port 3000
