@@ -100,7 +100,8 @@ router.get('/my-listings', verifyToken, async (req,res) => {
 router.get('/:listingId', async(req,res) => {
 
     try {
-        const foundListing = await Listing.findById(req.params.listingId)
+        // Only expose usernames for the seller and the current bidder
+        const foundListing = await Listing.findById(req.params.listingId).populate('seller currentBidder', 'username')
         res.status(200).json(foundListing)
     }
     catch(err){
