@@ -19,11 +19,14 @@ router.post("/listings/:id/reports", async (req, res) => {
             reporter: req.body.reporter,
             targetType: listing.type,
             targetId: listing._id,
+            reason: req.body.reason,
+            description: req.body.description,
             status: "open",
-       
+            createdAt: new Date()
         });
 
         res.status(201).json(report);
+
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
