@@ -22,6 +22,13 @@ const ReportSchema = new mongoose.Schema({
     createdAt: {
         type: Date
     }
+    ,
+    reason: {
+    type: String
+},
+description: {
+    type: String
+},
 }, {timestamps:true})
 
 const Report = mongoose.model("Report", ReportSchema)
