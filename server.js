@@ -12,6 +12,7 @@ const listingRoutes = require('./routes/listing.routes.js')
 const bidRoutes = require('./routes/Bid.routes.js')
 const orderRoutes =require('./routes/order.routes.js')
 const categoryRoutes=require('./routes/category.routes.js')
+const { closeEndedAuctions } = require('./utils/closeAuction.js')
 
 // Middleware
 app.use(
@@ -36,6 +37,10 @@ app.use('/' , categoryRoutes)
 async function startServer() {
     const PORT = process.env.PORT || 3000;
     await connectToDB();
+
+    // Close auctions whose end time has passed: once now, then every minute
+    closeEndedAuctions();
+    setInterval(closeEndedAuctions, 60 * 1000);
 
     app.listen(PORT, () => {
         console.log(`App is running on port ${PORT}`);
