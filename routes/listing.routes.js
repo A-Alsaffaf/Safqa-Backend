@@ -4,6 +4,7 @@ const Listing = require('../models/Listing')
 const Category = require('../models/Category')
 const Order = require('../models/Order')
 const verifyToken = require('../middleware/verifyToken')
+const { closeAuctionIfEnded } = require('../utils/closeAuction')
 
 
 router.get('/', async (req,res) => {
@@ -26,7 +27,15 @@ router.get('/', async (req,res) => {
 })
 
 
-router.post('/', async(req,res) => {
+router.get('/enums', (req,res) => {
+    res.status(200).json({
+        type: Listing.schema.path('type').enumValues,
+        condition: Listing.schema.path('condition').enumValues,
+    })
+})
+
+
+router.post('/',verifyToken, async(req,res) => {
 
     try {
 
@@ -36,7 +45,6 @@ router.post('/', async(req,res) => {
             type,
             condition,
             status,
-            seller,
             price,
             buyNowPrice,
             startingBid,
@@ -56,7 +64,7 @@ router.post('/', async(req,res) => {
             type,
             condition,
             status,
-            seller,
+            seller: req.user._id,
             price,
             buyNowPrice,
             startingBid,
@@ -73,15 +81,31 @@ router.post('/', async(req,res) => {
     } 
     catch(err){
         console.log(err);
+        res.status(404).json({message: err.message})
     }
 
+})
+
+router.get('/my-listings', verifyToken, async (req,res) => {
+    try {
+        const myListings = await Listing.find({seller: req.user._id})
+        res.status(200).json(myListings)
+    }
+    catch(err) {
+        console.log(err);
+        res.status(404).json({message: err.message})
+    }
 })
 
 
 router.get('/:listingId', async(req,res) => {
 
     try {
-        const foundListing = await Listing.findById(req.params.listingId)
+        // If this auction's end time has passed, close it first so the page shows the final state
+        await closeAuctionIfEnded(await Listing.findById(req.params.listingId))
+
+        // Only expose usernames for the seller, the current bidder and the winner
+        const foundListing = await Listing.findById(req.params.listingId).populate('seller currentBidder winner', 'username')
         res.status(200).json(foundListing)
     }
     catch(err){
@@ -192,6 +216,7 @@ router.post('/:listingId/buy-now', verifyToken, async (req,res) => {
     }
 
 })
+
 
 module.exports = router
 
