@@ -27,12 +27,13 @@ app.use(morgan('dev'))
 
 
 // Routes
-app.use('/auth',authRoutes)
+app.use('/auth', authRoutes)
 app.use('/listings', listingRoutes)
 app.use('/', bidRoutes)
-app.use('/orders' ,orderRoutes)
-app.use('/' , categoryRoutes)
-app.use('/' , reportRoutes)
+app.use('/orders', orderRoutes)
+app.use('/', categoryRoutes)
+app.use('/', reportRoutes)
+
 
 // connect to database and listen on Port 3000
 async function startServer() {
