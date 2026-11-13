@@ -182,16 +182,21 @@ router.post('/:listingId/buy-now', verifyToken, async (req,res) => {
 
     try {
 
+        if (!mongoose.isValidObjectId(req.params.listingId)) {
+            return res.status(400).json({message: 'Invalid listing id'})
+        }
+
+        // Only one buyer can win this update: it matches only while the listing is still Active
         const soldListing = await Listing.findOneAndUpdate(
             {
                 _id: req.params.listingId,
-                type: 'fixed',
-                status: 'active',
-                seller: { $ne: req.user.id },
+                type: 'Fixed',
+                status: 'Active',
+                seller: { $ne: req.user._id },
             },
             {
-                status: 'sold',
-                winner: req.user.id,
+                status: 'Sold',
+                winner: req.user._id,
             },
             { new: true }
         )
@@ -200,19 +205,19 @@ router.post('/:listingId/buy-now', verifyToken, async (req,res) => {
             return res.status(400).json({message: 'Listing is not available to buy now'})
         }
 
+        // No status is set, so the Order model's default applies (same as auction orders)
         const createdOrder = await Order.create({
             listing: soldListing._id,
-            buyer: req.user.id,
+            buyer: req.user._id,
             seller: soldListing.seller,
             finalPrice: soldListing.price,
-            status: 'pending',
         })
 
         res.status(201).json(createdOrder)
     }
     catch (err) {
         console.log(err);
-        res.json({message: err.message})
+        res.status(500).json({message: err.message})
     }
 
 })
