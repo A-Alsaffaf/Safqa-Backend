@@ -13,9 +13,15 @@ router.get('/', async (req,res) => {
 
         const filter = {}
 
-        if(req.query.filter)filter.type = req.query.filter
+        // Only filter by a real listing type ("Fixed" or "Auction"), ignore anything else
+        if (Listing.schema.path('type').enumValues.includes(req.query.filter)) {
+            filter.type = req.query.filter
+        }
 
-        const allListings = await Listing.find(filter).populate('seller currentBidder category winner')
+        // People are populated with their username only, so emails are not sent to visitors
+        const allListings = await Listing.find(filter)
+            .populate('seller currentBidder winner', 'username')
+            .populate('category')
 
         res.status(200).json(allListings)
 
@@ -44,36 +50,30 @@ router.post('/',verifyToken, async(req,res) => {
             description,
             type,
             condition,
-            status,
             price,
             buyNowPrice,
             startingBid,
-            currentBid,
-            currentBidder,
             startsAt,
             endsAt,
             category,
-            winner,
             images,
 
         } = req.body
 
+        // status, currentBid, currentBidder and winner are set by the server, never by the request,
+        // so a new listing always starts Active with no bids and no winner
         const createdListing = await Listing.create({
             title,
             description,
             type,
             condition,
-            status,
             seller: req.user._id,
             price,
             buyNowPrice,
             startingBid,
-            currentBid,
-            currentBidder,
             startsAt,
             endsAt,
             category,
-            winner,
             images,
         })
 
