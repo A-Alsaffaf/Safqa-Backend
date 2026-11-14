@@ -1,43 +1,49 @@
 // imports
 const connectToDB = require('./config/db.js')
-const express = require("express") //importing express package
-const app = express() // creates a express application
-const dotenv = require("dotenv").config() //this allows me to use my .env values in this file
+const express = require("express")
+const app = express()
+const dotenv = require("dotenv").config()
 const morgan = require('morgan')
 const cors = require('cors')
 
 // Routes Import
 const authRoutes = require('./routes/auth.routes')
 const listingRoutes = require('./routes/listing.routes.js')
-
+const bidRoutes = require('./routes/Bid.routes.js')
+const orderRoutes = require('./routes/order.routes.js')
+const categoryRoutes = require('./routes/category.routes.js')
+const reportRoutes = require('./routes/Report.routes.js')
+const { closeEndedAuctions } = require('./utils/closeAuction.js')
 
 // Middleware
 app.use(
     cors({
         origin: process.env.CLIENT_URL || 'http://localhost:5173',
     })
-);
+)
 app.use(express.json())
 app.use(morgan('dev'))
-
-
 
 // Routes
 app.use('/auth', authRoutes)
 app.use('/listings', listingRoutes)
+app.use('/', bidRoutes)
+app.use('/orders', orderRoutes)
+app.use('/', categoryRoutes)
+app.use('/', reportRoutes)
 
-  
 // connect to database and listen on Port 3000
 async function startServer() {
-    const PORT = process.env.PORT || 3000;
-    await connectToDB();
+    const PORT = process.env.PORT || 3000
+    await connectToDB()
 
     // Close auctions whose end time has passed: once now, then every minute
-    closeEndedAuctions();
-    setInterval(closeEndedAuctions, 60 * 1000);
+    closeEndedAuctions()
+    setInterval(closeEndedAuctions, 60 * 1000)
 
     app.listen(PORT, () => {
-        console.log(`App is running on port ${PORT}`);
-    });
+        console.log(`App is running on port ${PORT}`)
+    })
 }
-startServer();
+
+startServer()
