@@ -5,7 +5,7 @@ const Report = require("../models/Report");
 const Listing = require("../models/Listing");
 const verifyToken = require("../middleware/verifyToken");
 const validateObjectId = require("../middleware/validateObjectId");
-
+const User = require("../models/User")
 
 router.post("/listings/:id/reports", verifyToken, validateObjectId, async (req, res) => {
     try {
@@ -37,11 +37,13 @@ router.post("/listings/:id/reports", verifyToken, validateObjectId, async (req, 
 
 router.get("/admin/reports", verifyToken, async (req, res) => {
     try {
-        if (req.user.role !== "Admin") {
-            return res.status(403).json({
-                message: "Admin only"
-            });
-        }
+     const user = await User.findById(req.user._id);
+
+if (!user || user.role !== "Admin") {
+    return res.status(403).json({
+        message: "Admin only"
+    });
+}
 
         const filter = {};
 
@@ -63,11 +65,13 @@ router.get("/admin/reports", verifyToken, async (req, res) => {
 
 router.get("/admin/reports/:id", verifyToken, validateObjectId, async (req, res) => {
     try {
-        if (req.user.role !== "Admin") {
-            return res.status(403).json({
-                message: "Admin only"
-            });
-        }
+     const user = await User.findById(req.user._id);
+
+if (!user || user.role !== "Admin") {
+    return res.status(403).json({
+        message: "Admin only"
+    });
+}
 
         const report = await Report.findById(req.params.id)
             .populate("reporter", "username")
@@ -89,11 +93,11 @@ router.get("/admin/reports/:id", verifyToken, validateObjectId, async (req, res)
 
 router.put("/admin/reports/:id", verifyToken, validateObjectId, async (req, res) => {
     try {
-        if (req.user.role !== "Admin") {
-            return res.status(403).json({
-                message: "Admin only"
-            });
-        }
+        const user = await User.findById(req.user._id)
+
+if (!user || user.role !== "Admin") {
+    return res.status(403).json({ message: "Admin only" })
+}
 
         if (!["open", "reviewed", "dismissed"].includes(req.body.status)) {
             return res.status(400).json({
@@ -123,11 +127,13 @@ router.put("/admin/reports/:id", verifyToken, validateObjectId, async (req, res)
 
 router.delete("/admin/reports/:id", verifyToken, validateObjectId, async (req, res) => {
     try {
-        if (req.user.role !== "Admin") {
-            return res.status(403).json({
-                message: "Admin only"
-            });
-        }
+       const user = await User.findById(req.user._id);
+
+if (!user || user.role !== "Admin") {
+    return res.status(403).json({
+        message: "Admin only"
+    });
+}
 
         const report = await Report.findByIdAndDelete(req.params.id);
 
