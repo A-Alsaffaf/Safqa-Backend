@@ -17,7 +17,7 @@ const ReportSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["open", "reviewed", "dismessed"]
+        enum: ["open", "reviewed", "dismissed"]
     },
     createdAt: {
         type: Date
