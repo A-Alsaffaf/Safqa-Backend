@@ -230,31 +230,79 @@ router.post('/:listingId/buy-now', verifyToken, async (req,res) => {
             return res.status(400).json({message: 'Invalid listing id'})
         }
 
-        // Only one buyer can win this update: it matches only while the listing is still Active
-        const soldListing = await Listing.findOneAndUpdate(
-            {
-                _id: req.params.listingId,
-                type: 'Fixed',
-                status: 'Active',
-                seller: { $ne: req.user._id },
-            },
-            {
-                status: 'Sold',
-                winner: req.user._id,
-            },
-            { new: true }
-        )
+        const { listingId } = req.params
+        const listing = await Listing.findById(listingId)
 
-        if (!soldListing) {
+        if (!listing) {
+            return res.status(404).json({message: 'Listing not found'})
+        }
+
+        if (listing.seller && listing.seller.toString() === req.user._id) {
+            return res.status(403).json({message: 'You cannot buy your own listing'})
+        }
+
+        if (listing.status !== 'Active') {
             return res.status(400).json({message: 'Listing is not available to buy now'})
         }
 
-        // No status is set, so the Order model's default applies (same as auction orders)
+        // What the buyer pays, which listing it must still match, and what the sale changes
+        let finalPrice, filter, update
+
+        if (listing.type === 'Fixed') {
+            finalPrice = listing.price
+            filter = { _id: listingId, type: 'Fixed', status: 'Active', seller: { $ne: req.user._id } }
+            update = { status: 'Sold', winner: req.user._id }
+        }
+        else {
+            const now = new Date()
+
+            if (listing.buyNowPrice == null) {
+                return res.status(400).json({message: 'This auction has no buy now price'})
+            }
+
+            if (listing.startsAt && now < listing.startsAt) {
+                return res.status(400).json({message: 'This auction has not started yet'})
+            }
+
+            if (listing.endsAt && now >= listing.endsAt) {
+                return res.status(400).json({message: 'This auction has ended'})
+            }
+
+            if (listing.currentBid != null && listing.currentBid >= listing.buyNowPrice) {
+                return res.status(400).json({message: 'A bid has already reached the buy now price'})
+            }
+
+            // Buying now sells the auction at the buy now price. Setting currentBid and currentBidder
+            // keeps the page ("Sold to ... for BD ...") and the Order repair in closeAuction.js correct.
+            finalPrice = listing.buyNowPrice
+            filter = {
+                _id: listingId,
+                type: 'Auction',
+                status: 'Active',
+                seller: { $ne: req.user._id },
+                currentBid: listing.currentBid ?? null,
+            }
+            if (listing.endsAt) filter.endsAt = { $gt: now }
+            update = { status: 'Sold', winner: req.user._id, currentBid: finalPrice, currentBidder: req.user._id }
+        }
+
+        // Only one buyer can win this update: it matches only while the listing is unchanged since it was read.
+        // For an auction that also means no bid arrived and it did not close in the meantime.
+        const soldListing = await Listing.findOneAndUpdate(filter, update, { new: true })
+
+        if (!soldListing) {
+            if (listing.type === 'Auction') {
+                return res.status(409).json({message: 'The auction changed while you were buying. Please refresh and try again'})
+            }
+            return res.status(400).json({message: 'Listing is not available to buy now'})
+        }
+
+        // No status is set, so the Order model's default applies (same as auction closing)
         const createdOrder = await Order.create({
             listing: soldListing._id,
             buyer: req.user._id,
             seller: soldListing.seller,
-            finalPrice: soldListing.price,
+            finalPrice,
         })
 
         res.status(201).json(createdOrder)
