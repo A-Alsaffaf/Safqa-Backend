@@ -10,7 +10,10 @@ router.get('/', verifyToken, async (req, res) => {
     const orders = await Order.find({
       $or: [{ buyer: userId }, { seller: userId }]
     })
-      .populate('listing')
+      .populate({
+        path: 'listing',
+        populate: { path: 'category' }
+      })
       .populate('buyer')
       .populate('seller')
 
@@ -24,7 +27,10 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:id', verifyToken, validateObjectId, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
-      .populate('listing')
+      .populate({
+        path: 'listing',
+        populate: { path: 'category' }
+      })
       .populate('buyer')
       .populate('seller')
 
