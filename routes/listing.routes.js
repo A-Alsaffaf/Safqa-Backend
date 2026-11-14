@@ -114,10 +114,31 @@ router.get('/:listingId', async(req,res) => {
 
 })
 
-router.put('/:listingId', async (req,res) => {
+router.put('/:listingId', verifyToken, async (req,res) => {
 
     try {
 
+        const { listingId } = req.params
+
+        if (!mongoose.isValidObjectId(listingId)) {
+            return res.status(400).json({message: 'Invalid listing id'})
+        }
+
+        const listing = await Listing.findById(listingId)
+
+        if (!listing) {
+            return res.status(404).json({message: 'Listing not found'})
+        }
+
+        if (!listing.seller || listing.seller.toString() !== req.user._id) {
+            return res.status(403).json({message: 'Only the seller can edit this listing'})
+        }
+
+        if (listing.status !== 'Active') {
+            return res.status(400).json({message: 'Only active listings can be edited'})
+        }
+
+        // Only these fields can be edited. type, status and seller are never read from the body.
         const {
             title,
             description,
@@ -131,20 +152,21 @@ router.put('/:listingId', async (req,res) => {
             images,
         } = req.body
 
+        const changes = { title, description, condition, category, images }
+
+        // Fixed listings change their price. Auctions can change their bidding terms until the first bid.
+        // Fields left undefined are ignored by Mongoose, so they keep their saved value.
+        const hasBids = listing.type === 'Auction' && listing.currentBid != null
+
+        if (listing.type === 'Fixed') {
+            changes.price = price
+        } else if (!hasBids) {
+            Object.assign(changes, { buyNowPrice, startingBid, startsAt, endsAt })
+        }
+
         const updatedListing = await Listing.findByIdAndUpdate(
-            req.params.listingId,
-            {
-                title,
-                description,
-                condition,
-                price,
-                buyNowPrice,
-                startingBid,
-                startsAt,
-                endsAt,
-                category,
-                images,
-            },
+            listingId,
+            changes,
             { new: true, runValidators: true }
         )
 
@@ -152,27 +174,49 @@ router.put('/:listingId', async (req,res) => {
     }
     catch (err) {
         console.log(err);
-        res.json({message: err.message})
+        res.status(500).json({message: err.message})
     }
 
 })
 
 
-router.delete('/:listingId', async (req,res) => {
+router.delete('/:listingId', verifyToken, async (req,res) => {
 
     try {
 
-        const removedListing = await Listing.findByIdAndUpdate(
-            req.params.listingId,
-            { status: 'removed' },
-            { new: true }
-        )
+        const { listingId } = req.params
 
-        res.status(200).json(removedListing)
+        if (!mongoose.isValidObjectId(listingId)) {
+            return res.status(400).json({message: 'Invalid listing id'})
+        }
+
+        const listing = await Listing.findById(listingId)
+
+        if (!listing) {
+            return res.status(404).json({message: 'Listing not found'})
+        }
+
+        if (!listing.seller || listing.seller.toString() !== req.user._id) {
+            return res.status(403).json({message: 'Only the seller can remove this listing'})
+        }
+
+        if (listing.status !== 'Active') {
+            return res.status(400).json({message: 'Only active listings can be removed'})
+        }
+
+        // Removing an auction that has bids would strand the bidders
+        if (listing.type === 'Auction' && listing.currentBid != null) {
+            return res.status(400).json({message: 'An auction that has bids cannot be removed'})
+        }
+
+        listing.status = 'Removed'
+        await listing.save()
+
+        res.status(200).json(listing)
     }
     catch (err) {
         console.log(err);
-        res.json({message: err.message})
+        res.status(500).json({message: err.message})
     }
 
 })
