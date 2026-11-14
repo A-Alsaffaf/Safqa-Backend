@@ -26,7 +26,7 @@ const listingSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['Active', 'Sold', 'Closed', 'Removed'],
-        default: 'active'
+        default: 'Active'
     },
     seller: {
         type: mongoose.Types.ObjectId,
@@ -59,8 +59,12 @@ const listingSchema = new mongoose.Schema({
         type: Date
     },
     category: {
-        type: mongoose.Types.ObjectId,
-        ref: 'Category'
+        type: [mongoose.Types.ObjectId],
+        ref: 'Category',
+        validate: {
+            validator: (categories) => categories.length <= 5,
+            message: 'A listing can have at most 5 categories'
+        }
     },
     winner: {
         type: mongoose.Types.ObjectId,
