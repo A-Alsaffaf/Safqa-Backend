@@ -3,6 +3,7 @@ const router = require("express").Router();
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const verifyToken = require("../middleware/verifyToken");
 
 
 router.post("/sign-up", async (req, res) => {
@@ -67,8 +68,7 @@ router.post("/sign-in", async (req, res) => {
     }
 
     // Construct the payload
-    const payload = { username: user.username, _id: user._id };
-
+    const payload = { username: user.username, _id: user._id, role: user.role };
 
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "1h",
@@ -78,6 +78,7 @@ router.post("/sign-in", async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
+        role: user.role,
       },
     });
   } catch (err) {
@@ -86,6 +87,16 @@ router.post("/sign-in", async (req, res) => {
     return res.status(500).json({
       message: "Internal Server Error",
     });
+  }
+});
+
+router.get("/me", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-hashedPassword");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

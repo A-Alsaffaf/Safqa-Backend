@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const Order = require('../models/Order')
+const User = require('../models/User')
 const verifyToken = require('../middleware/verifyToken')
 const validateObjectId = require('../middleware/validateObjectId')
 
@@ -41,7 +42,10 @@ router.get('/:id', verifyToken, validateObjectId, async (req, res) => {
     const buyerId = order.buyer._id || order.buyer
     const sellerId = order.seller._id || order.seller
 
-    if (!buyerId.equals(userId) && !sellerId.equals(userId))
+    const currentUser = await User.findById(userId)
+    const isAdmin = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'admin')
+
+    if (!buyerId.equals(userId) && !sellerId.equals(userId) && !isAdmin)
       return res.status(403).json({ error: 'Not A seller or buyer' })
 
     res.status(200).json(order)
@@ -64,12 +68,12 @@ router.put('/:id/status', verifyToken, validateObjectId, async (req, res) => {
     if (!order) return res.status(404).json({ error: 'Order not found' })
 
     const userId = req.user._id || req.user.id
+    const currentUser = await User.findById(userId)
+    const isAdmin = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'admin')
 
-    const buyerId = order.buyer._id || order.buyer
-    const sellerId = order.seller._id || order.seller
-
-    if (!buyerId.equals(userId) && !sellerId.equals(userId))
-      return res.status(403).json({ error: 'Not a buyer or seller' })
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Admins only can update order status' })
+    }
 
     order.statues = status
 
