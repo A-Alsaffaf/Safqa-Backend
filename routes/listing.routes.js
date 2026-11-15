@@ -1,4 +1,5 @@
 const router = require('express').Router()
+const upload = require('../middleware/upload')
 const mongoose = require('mongoose')
 const Listing = require('../models/Listing')
 const Category = require('../models/Category')
@@ -85,6 +86,25 @@ router.post('/',verifyToken, async(req,res) => {
     }
 
 })
+
+router.post('/upload', verifyToken, (req, res) => {
+    upload.array('images', 5)(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({message: err.message})
+        }
+
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({message: 'No images uploaded'})
+        }
+
+        const urls = req.files.map((file) => {
+            return `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
+        })
+
+        res.status(201).json(urls)
+    })
+})
+
 
 router.get('/my-listings', verifyToken, async (req,res) => {
     try {
