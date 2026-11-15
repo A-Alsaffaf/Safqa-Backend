@@ -71,7 +71,7 @@ router.post("/sign-in", async (req, res) => {
     const payload = { username: user.username, _id: user._id, role: user.role };
 
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "24h",
     });
     return res.status(200).json({
       accessToken,
