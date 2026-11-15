@@ -22,6 +22,7 @@ app.use(
     })
 )
 app.use(express.json())
+app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')))
 app.use(morgan('dev'))
 
 // Routes
