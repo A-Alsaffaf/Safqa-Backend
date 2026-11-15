@@ -108,6 +108,36 @@ router.post('/listings/:listingId/bids', verifyToken, async(req,res) => {
         res.status(500).json({message: err.message})
     }
 })
+
+router.get('/bids/my-bids', verifyToken, async (req, res) => {
+    try {
+        const myBids = await Bid.find({ bidder: req.user._id })
+            .populate('auction')
+            .sort({ createdAt: -1 })
+
+        const byListing = new Map()
+
+        for (const bid of myBids) {
+            if (!bid.auction) continue
+
+            const key = bid.auction._id.toString()
+
+            if (!byListing.has(key)) {
+                byListing.set(key, { listing: bid.auction, myHighestBid: bid.amount })
+            } else {
+                const entry = byListing.get(key)
+                entry.myHighestBid = Math.max(entry.myHighestBid, bid.amount)
+            }
+        }
+
+        res.status(200).json(Array.from(byListing.values()))
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({message: err.message})
+    }
+})
+
 module.exports = router
 
 // localhost:3000/listings?q=Fixed
