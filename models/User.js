@@ -22,7 +22,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['User', 'Admin'],
       default: 'User'
-    }
+    },
+    // Listings the user is watching (ids only, the listing documents live in their own collection)
+    watchlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Listing'
+      }
+    ]
 
   },{ timestamps: true });
 
