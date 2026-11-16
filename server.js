@@ -13,6 +13,7 @@ const bidRoutes = require('./routes/Bid.routes.js')
 const orderRoutes = require('./routes/order.routes.js')
 const categoryRoutes = require('./routes/category.routes.js')
 const reportRoutes = require('./routes/Report.routes.js')
+const watchlistRoutes = require('./routes/watchlist.routes.js')
 const { closeEndedAuctions } = require('./utils/closeAuction.js')
 
 // Middleware
@@ -32,6 +33,7 @@ app.use('/', bidRoutes)
 app.use('/orders', orderRoutes)
 app.use('/', categoryRoutes)
 app.use('/', reportRoutes)
+app.use('/watchlist', watchlistRoutes)
 
 // connect to database and listen on Port 3000
 async function startServer() {
