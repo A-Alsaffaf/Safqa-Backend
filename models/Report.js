@@ -24,10 +24,22 @@ const ReportSchema = new mongoose.Schema({
     }
     ,
     reason: {
-    type: String
+    type: String,
+    required: true,
+    trim: true
 },
 description: {
-    type: String
+    type: String,
+    required: true,
+    trim: true
+},
+isDeleted: {
+    type: Boolean,
+    default: false
+},
+deletedAt: {
+    type: Date,
+    default: null
 },
 }, {timestamps:true})
 

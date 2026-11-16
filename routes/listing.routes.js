@@ -12,7 +12,7 @@ router.get('/', async (req,res) => {
 
     try {
 
-        const filter = {}
+        const filter = { status: { $ne: 'Removed' } }
 
         // Only filter by a real listing type ("Fixed" or "Auction"), ignore anything else
         if (Listing.schema.path('type').enumValues.includes(req.query.filter)) {
@@ -108,7 +108,7 @@ router.post('/upload', verifyToken, (req, res) => {
 
 router.get('/my-listings', verifyToken, async (req,res) => {
     try {
-        const myListings = await Listing.find({seller: req.user._id})
+        const myListings = await Listing.find({seller: req.user._id, status: { $ne: 'Removed' }})
         res.status(200).json(myListings)
     }
     catch(err) {
@@ -121,15 +121,29 @@ router.get('/my-listings', verifyToken, async (req,res) => {
 router.get('/:listingId', async(req,res) => {
 
     try {
+        if (!mongoose.isValidObjectId(req.params.listingId)) {
+            return res.status(400).json({message: 'Invalid listing id'})
+        }
+
+        const listing = await Listing.findById(req.params.listingId)
+
+        if (!listing || listing.status === 'Removed') {
+            return res.status(404).json({message: 'Listing not found'})
+        }
+
         // If this auction's end time has passed, close it first so the page shows the final state
-        await closeAuctionIfEnded(await Listing.findById(req.params.listingId))
+        await closeAuctionIfEnded(listing)
 
         // Only expose usernames for the seller, the current bidder and the winner
         const foundListing = await Listing.findById(req.params.listingId).populate('seller currentBidder winner', 'username')
+        if (!foundListing || foundListing.status === 'Removed') {
+            return res.status(404).json({message: 'Listing not found'})
+        }
         res.status(200).json(foundListing)
     }
     catch(err){
         console.log(err);
+        res.status(500).json({message: err.message})
     }
 
 })
